@@ -4,3 +4,6 @@
 [submodule "lib/ngt"]
 	path = lib/ngt
 	url = https://github.com/makerdao/ngt
+[submodule "lib/nst"]
+	path = lib/nst
+	url = https://github.com/makerdao/nst
