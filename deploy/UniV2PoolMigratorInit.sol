@@ -20,6 +20,7 @@ import { DssInstance } from "dss-test/MCD.sol";
 
 interface GemLike {
     function balanceOf(address) external view returns (uint256);
+    function totalSupply() external view returns (uint256);
     function approve(address, uint256) external;
     function transfer(address, uint256) external;
 }
@@ -46,6 +47,8 @@ library UniV2PoolMigratorInit {
         // Using pProxy instead of address(this) as otherwise won't work in tests, in real execution should be same address
         address pProxy = dss.chainlog.getAddress("MCD_PAUSE_PROXY");
 
+        require(GemLike(pairNstNgt).totalSupply() == 0, "UniV2PoolMigratorInit/sanity-check-1-failed");
+
         GemLike dai = GemLike(dss.chainlog.getAddress("MCD_DAI"));
         GemLike mkr = GemLike(dss.chainlog.getAddress("MCD_GOV"));
 
@@ -66,6 +69,6 @@ library UniV2PoolMigratorInit {
         mkrNgt.mkrToNgt(pairNstNgt, mkrAmt);
         PoolLike(pairNstNgt).mint(pProxy);
 
-        require(GemLike(pairNstNgt).balanceOf(pProxy) > 0, "UniV2PoolMigratorInit/sanity-check-failed");
+        require(GemLike(pairNstNgt).balanceOf(pProxy) > 0, "UniV2PoolMigratorInit/sanity-check-2-failed");
     }
 }

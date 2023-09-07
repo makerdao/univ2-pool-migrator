@@ -93,7 +93,8 @@ contract DeploymentTest is DssTest {
         assertEq(pProxyDaiMkrBalanceAft, 0);
         uint256 pProxyNstNgtBalanceAft = GemLike(UNIV2_NST_NGT_PAIR).balanceOf(PAUSE_PROXY);
         assertGt(pProxyNstNgtBalanceAft, 0);
-        assertEq(pProxyNstNgtBalanceAft, GemLike(UNIV2_NST_NGT_PAIR).totalSupply() - 10**3); // (UniV2Pool MINIMUM_LIQUIDITY)
+        // 10**3 == UniswapV2Pair MINIMUM_LIQUIDITY => https://github.com/Uniswap/v2-core/blob/ee547b17853e71ed4e0101ccfd52e70d5acded58/contracts/UniswapV2Pair.sol#L121
+        assertEq(pProxyNstNgtBalanceAft, GemLike(UNIV2_NST_NGT_PAIR).totalSupply() - 10**3);
 
         assertEq(GemLike(NST).balanceOf(UNIV2_NST_NGT_PAIR), pProxyDaiBalance);
         assertEq(GemLike(NGT).balanceOf(UNIV2_NST_NGT_PAIR), pProxyMkrBalance * 1200);
