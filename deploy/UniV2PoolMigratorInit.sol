@@ -58,8 +58,8 @@ library UniV2PoolMigratorInit {
         GemLike(pairDaiMkr).transfer(pairDaiMkr, GemLike(pairDaiMkr).balanceOf(pProxy));
         PoolLike(pairDaiMkr).burn(pProxy);
 
-        DaiNstLike daiNst = DaiNstLike(dss.chainlog.getAddress("DAINST"));
-        MkrNgtLike mkrNgt = MkrNgtLike(dss.chainlog.getAddress("MKRNGT"));
+        DaiNstLike daiNst = DaiNstLike(dss.chainlog.getAddress("DAI_NST"));
+        MkrNgtLike mkrNgt = MkrNgtLike(dss.chainlog.getAddress("MKR_NGT"));
 
         uint256 daiAmt = dai.balanceOf(pProxy) - daiAmtPrev;
         uint256 mkrAmt = mkr.balanceOf(pProxy) - mkrAmtPrev;
