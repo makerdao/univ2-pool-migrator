@@ -4,8 +4,8 @@
 [submodule "lib/ngt"]
 	path = lib/ngt
 	url = https://github.com/makerdao/ngt
-	branch = deploy-scripts
+	branch = dev
 [submodule "lib/nst"]
 	path = lib/nst
 	url = https://github.com/makerdao/nst
-	branch = deploy-scripts
+	branch = dev
