@@ -104,11 +104,11 @@ contract DeploymentTest is DssTest {
         assertEq(GemLike(NGT).balanceOf(UNIV2_NST_NGT_PAIR), pProxyMkrBalance * 1200);
     }
 
-    function checkPriceSanityCheck(uint256 newUniPrice) public {
+    function checkPriceSanityCheck(uint256 newPipPrice) public {
         DssInstance memory dss = MCD.loadFromChainlog(LOG);
         address pipMkr = ChainlogLike(LOG).getAddress("PIP_MKR");
 
-        vm.store(address(pipMkr), bytes32(uint256(1)), bytes32(newUniPrice));
+        vm.store(address(pipMkr), bytes32(uint256(1)), bytes32(newPipPrice));
         vm.startPrank(PAUSE_PROXY);
         UniV2PoolMigratorInit.init(dss, UNIV2_DAI_MKR_PAIR, UNIV2_NST_NGT_PAIR);
         vm.stopPrank();
