@@ -40,7 +40,7 @@ interface UniV2FactoryLike {
 }
 
 interface PoolLike {
-    function getReserves() external view returns (uint256, uint256, uint32);
+    function getReserves() external view returns (uint112, uint112, uint32);
 }
 
 contract DeploymentTest is DssTest {
