@@ -39,6 +39,10 @@ interface UniV2FactoryLike {
     function createPair(address, address) external returns (address);
 }
 
+interface PoolLike {
+    function getReserves() external view returns (uint256, uint256, uint32);
+}
+
 contract DeploymentTest is DssTest {
     address constant LOG = 0xdA0Ab1e0017DEbCd72Be8599041a2aa3bA7e740F;
     address constant UNIV2_DAI_MKR_PAIR = 0x517F9dD285e75b599234F7221227339478d0FcC8;
@@ -98,5 +102,29 @@ contract DeploymentTest is DssTest {
 
         assertEq(GemLike(NST).balanceOf(UNIV2_NST_NGT_PAIR), pProxyDaiBalance);
         assertEq(GemLike(NGT).balanceOf(UNIV2_NST_NGT_PAIR), pProxyMkrBalance * 1200);
+    }
+
+    function checkPriceSanityCheck(uint256 newUniPrice) public {
+        DssInstance memory dss = MCD.loadFromChainlog(LOG);
+        address pipMkr = ChainlogLike(LOG).getAddress("PIP_MKR");
+
+        vm.store(address(pipMkr), bytes32(uint256(1)), bytes32(newUniPrice));
+        vm.startPrank(PAUSE_PROXY);
+        UniV2PoolMigratorInit.init(dss, UNIV2_DAI_MKR_PAIR, UNIV2_NST_NGT_PAIR);
+        vm.stopPrank();
+    }
+
+    function testPriceSanityCheck() public {
+        (uint256 daiReserve, uint256 mkrReserve, ) = PoolLike(UNIV2_DAI_MKR_PAIR).getReserves();
+        uint256 uniPrice = daiReserve * 1e18 / mkrReserve;
+
+        vm.expectRevert("UniV2PoolMigratorInit/sanity-check-2-failed");
+        this.checkPriceSanityCheck(uniPrice * 100 / 103);
+
+        vm.expectRevert("UniV2PoolMigratorInit/sanity-check-2-failed");
+        this.checkPriceSanityCheck(uniPrice * 100 / 97);
+
+        // No revert
+        this.checkPriceSanityCheck(uniPrice);
     }
 }

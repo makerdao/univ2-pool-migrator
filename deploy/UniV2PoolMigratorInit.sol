@@ -28,6 +28,7 @@ interface GemLike {
 interface PoolLike {
     function mint(address) external;
     function burn(address) external;
+    function getReserves() external view returns (uint112, uint112, uint32);
 }
 
 interface DaiNstLike {
@@ -36,6 +37,12 @@ interface DaiNstLike {
 
 interface MkrNgtLike {
     function mkrToNgt(address, uint256) external;
+}
+
+interface PipLike {
+    function read() external view returns (bytes32);
+    function kiss(address) external;
+    function diss(address) external;
 }
 
 library UniV2PoolMigratorInit {
@@ -48,6 +55,22 @@ library UniV2PoolMigratorInit {
         address pProxy = dss.chainlog.getAddress("MCD_PAUSE_PROXY");
 
         require(GemLike(pairNstNgt).totalSupply() == 0, "UniV2PoolMigratorInit/sanity-check-1-failed");
+
+        // Sanity check for Uniswap vs oracle price. This is completely unnecessary but acts as a separate safety layer.
+        {
+        PipLike mkrPip = PipLike(dss.chainlog.getAddress("PIP_MKR"));
+        mkrPip.kiss(pProxy);
+        uint256 pipPrice = uint256(mkrPip.read()); // Assume par is 1
+        mkrPip.diss(pProxy);
+
+        (uint256 daiReserve, uint256 mkrReserve, ) = PoolLike(pairDaiMkr).getReserves();
+        uint256 uniPrice = daiReserve * 1e18 / mkrReserve;
+
+        require(
+            uniPrice < pipPrice * 102 / 100 && uniPrice > pipPrice * 98 / 100,
+            "UniV2PoolMigratorInit/sanity-check-2-failed"
+        );
+        }
 
         GemLike dai = GemLike(dss.chainlog.getAddress("MCD_DAI"));
         GemLike mkr = GemLike(dss.chainlog.getAddress("MCD_GOV"));
@@ -69,6 +92,6 @@ library UniV2PoolMigratorInit {
         mkrNgt.mkrToNgt(pairNstNgt, mkrAmt);
         PoolLike(pairNstNgt).mint(pProxy);
 
-        require(GemLike(pairNstNgt).balanceOf(pProxy) > 0, "UniV2PoolMigratorInit/sanity-check-2-failed");
+        require(GemLike(pairNstNgt).balanceOf(pProxy) > 0, "UniV2PoolMigratorInit/sanity-check-3-failed");
     }
 }
