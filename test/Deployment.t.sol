@@ -20,10 +20,10 @@ import "dss-test/DssTest.sol";
 
 import { UniV2PoolMigratorInit } from "deploy/UniV2PoolMigratorInit.sol";
 
-import { NstDeploy } from "lib/nst/deploy/NstDeploy.sol";
-import { NstInit, NstInstance } from "lib/nst/deploy/NstInit.sol";
-import { NgtDeploy } from "lib/ngt/deploy/NgtDeploy.sol";
-import { NgtInit, NgtInstance } from "lib/ngt/deploy/NgtInit.sol";
+import { UsdsDeploy } from "lib/usds/deploy/UsdsDeploy.sol";
+import { UsdsInit, UsdsInstance } from "lib/usds/deploy/UsdsInit.sol";
+import { SkyDeploy } from "lib/sky/deploy/SkyDeploy.sol";
+import { SkyInit, SkyInstance } from "lib/sky/deploy/SkyInit.sol";
 
 interface ChainlogLike {
     function getAddress(bytes32) external view returns (address);
@@ -51,9 +51,9 @@ contract DeploymentTest is DssTest {
     address PAUSE_PROXY;
     address DAI;
     address MKR;
-    address NST;
-    address NGT;
-    address UNIV2_NST_NGT_PAIR;
+    address USDS;
+    address SKY;
+    address UNIV2_USDS_SKY_PAIR;
 
     function setUp() public {
         vm.createSelectFork(vm.envString("ETH_RPC_URL"));
@@ -62,20 +62,20 @@ contract DeploymentTest is DssTest {
 
         PAUSE_PROXY = ChainlogLike(LOG).getAddress("MCD_PAUSE_PROXY");
 
-        NstInstance memory nstInst = NstDeploy.deploy(address(this), PAUSE_PROXY, ChainlogLike(LOG).getAddress("MCD_JOIN_DAI"));
-        NgtInstance memory ngtInst = NgtDeploy.deploy(address(this), PAUSE_PROXY, ChainlogLike(LOG).getAddress("MCD_GOV"), 1200);
+        UsdsInstance memory usdsInst = UsdsDeploy.deploy(address(this), PAUSE_PROXY, ChainlogLike(LOG).getAddress("MCD_JOIN_DAI"));
+        SkyInstance  memory  skyInst = SkyDeploy.deploy(address(this), PAUSE_PROXY, ChainlogLike(LOG).getAddress("MCD_GOV"), 24_000);
 
         vm.startPrank(PAUSE_PROXY);
-        NstInit.init(dss, nstInst);
-        NgtInit.init(dss, ngtInst);
+        UsdsInit.init(dss, usdsInst);
+        SkyInit.init(dss, skyInst, 24_000);
         vm.stopPrank();
 
-        DAI = ChainlogLike(LOG).getAddress("MCD_DAI");
-        MKR = ChainlogLike(LOG).getAddress("MCD_GOV");
-        NST = ChainlogLike(LOG).getAddress("NST");
-        NGT = ChainlogLike(LOG).getAddress("NGT");
+        DAI  = ChainlogLike(LOG).getAddress("MCD_DAI");
+        MKR  = ChainlogLike(LOG).getAddress("MCD_GOV");
+        USDS = ChainlogLike(LOG).getAddress("USDS");
+        SKY  = ChainlogLike(LOG).getAddress("SKY");
 
-        UNIV2_NST_NGT_PAIR = UniV2FactoryLike(UNIV2_FACTORY).createPair(NST, NGT);
+        UNIV2_USDS_SKY_PAIR = UniV2FactoryLike(UNIV2_FACTORY).createPair(USDS, SKY);
     }
 
     function testSetUp() public {
@@ -83,25 +83,25 @@ contract DeploymentTest is DssTest {
 
         uint256 pProxyDaiMkrBalancePrev = GemLike(UNIV2_DAI_MKR_PAIR).balanceOf(PAUSE_PROXY);
         assertGt(pProxyDaiMkrBalancePrev, 0);
-        uint256 pProxyNstNgtBalancePrev = GemLike(UNIV2_NST_NGT_PAIR).balanceOf(PAUSE_PROXY);
-        assertEq(pProxyNstNgtBalancePrev, 0);
+        uint256 pProxyUsdsSkyBalancePrev = GemLike(UNIV2_USDS_SKY_PAIR).balanceOf(PAUSE_PROXY);
+        assertEq(pProxyUsdsSkyBalancePrev, 0);
 
         uint256 pProxyDaiBalance = GemLike(DAI).balanceOf(UNIV2_DAI_MKR_PAIR) * pProxyDaiMkrBalancePrev / GemLike(UNIV2_DAI_MKR_PAIR).totalSupply();
         uint256 pProxyMkrBalance = GemLike(MKR).balanceOf(UNIV2_DAI_MKR_PAIR) * pProxyDaiMkrBalancePrev / GemLike(UNIV2_DAI_MKR_PAIR).totalSupply();
 
         vm.startPrank(PAUSE_PROXY);
-        UniV2PoolMigratorInit.init(dss, UNIV2_DAI_MKR_PAIR, UNIV2_NST_NGT_PAIR);
+        UniV2PoolMigratorInit.init(dss, UNIV2_DAI_MKR_PAIR, UNIV2_USDS_SKY_PAIR);
         vm.stopPrank();
 
         uint256 pProxyDaiMkrBalanceAft = GemLike(UNIV2_DAI_MKR_PAIR).balanceOf(PAUSE_PROXY);
         assertEq(pProxyDaiMkrBalanceAft, 0);
-        uint256 pProxyNstNgtBalanceAft = GemLike(UNIV2_NST_NGT_PAIR).balanceOf(PAUSE_PROXY);
-        assertGt(pProxyNstNgtBalanceAft, 0);
+        uint256 pProxyUsdsSkyBalanceAft = GemLike(UNIV2_USDS_SKY_PAIR).balanceOf(PAUSE_PROXY);
+        assertGt(pProxyUsdsSkyBalanceAft, 0);
         // 10**3 == UniswapV2Pair MINIMUM_LIQUIDITY => https://github.com/Uniswap/v2-core/blob/ee547b17853e71ed4e0101ccfd52e70d5acded58/contracts/UniswapV2Pair.sol#L121
-        assertEq(pProxyNstNgtBalanceAft, GemLike(UNIV2_NST_NGT_PAIR).totalSupply() - 10**3);
+        assertEq(pProxyUsdsSkyBalanceAft, GemLike(UNIV2_USDS_SKY_PAIR).totalSupply() - 10**3);
 
-        assertEq(GemLike(NST).balanceOf(UNIV2_NST_NGT_PAIR), pProxyDaiBalance);
-        assertEq(GemLike(NGT).balanceOf(UNIV2_NST_NGT_PAIR), pProxyMkrBalance * 1200);
+        assertEq(GemLike(USDS).balanceOf(UNIV2_USDS_SKY_PAIR), pProxyDaiBalance);
+        assertEq(GemLike(SKY).balanceOf(UNIV2_USDS_SKY_PAIR), pProxyMkrBalance * 24_000);
     }
 
     function checkPriceSanityCheck(uint256 newPipPrice) public {
@@ -110,7 +110,7 @@ contract DeploymentTest is DssTest {
 
         vm.store(address(pipMkr), bytes32(uint256(1)), bytes32(newPipPrice));
         vm.startPrank(PAUSE_PROXY);
-        UniV2PoolMigratorInit.init(dss, UNIV2_DAI_MKR_PAIR, UNIV2_NST_NGT_PAIR);
+        UniV2PoolMigratorInit.init(dss, UNIV2_DAI_MKR_PAIR, UNIV2_USDS_SKY_PAIR);
         vm.stopPrank();
     }
 
