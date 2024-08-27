@@ -3,9 +3,9 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "lib/sky"]
 	path = lib/sky
-	url = https://github.com/lib/sky
+	url = https://github.com/makerdao/sky
 	branch = dev
 [submodule "lib/usds"]
 	path = lib/usds
-	url = https://github.com/lib/usds
+	url = https://github.com/makerdao/usds
 	branch = dev
