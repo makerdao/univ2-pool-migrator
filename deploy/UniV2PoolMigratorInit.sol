@@ -31,12 +31,12 @@ interface PoolLike {
     function getReserves() external view returns (uint112, uint112, uint32);
 }
 
-interface DaiNstLike {
-    function daiToNst(address, uint256) external;
+interface DaiUsdsLike {
+    function daiToUsds(address, uint256) external;
 }
 
-interface MkrNgtLike {
-    function mkrToNgt(address, uint256) external;
+interface MkrSkyLike {
+    function mkrToSky(address, uint256) external;
 }
 
 interface PipLike {
@@ -49,12 +49,12 @@ library UniV2PoolMigratorInit {
     function init(
         DssInstance memory dss,
         address pairDaiMkr,
-        address pairNstNgt
+        address pairUsdsSky
     ) internal {
         // Using pProxy instead of address(this) as otherwise won't work in tests, in real execution should be same address
         address pProxy = dss.chainlog.getAddress("MCD_PAUSE_PROXY");
 
-        require(GemLike(pairNstNgt).totalSupply() == 0, "UniV2PoolMigratorInit/sanity-check-1-failed");
+        require(GemLike(pairUsdsSky).totalSupply() == 0, "UniV2PoolMigratorInit/sanity-check-1-failed");
 
         // Sanity check for Uniswap vs oracle price. This is completely unnecessary but acts as a separate safety layer.
         {
@@ -81,17 +81,17 @@ library UniV2PoolMigratorInit {
         GemLike(pairDaiMkr).transfer(pairDaiMkr, GemLike(pairDaiMkr).balanceOf(pProxy));
         PoolLike(pairDaiMkr).burn(pProxy);
 
-        DaiNstLike daiNst = DaiNstLike(dss.chainlog.getAddress("DAI_NST"));
-        MkrNgtLike mkrNgt = MkrNgtLike(dss.chainlog.getAddress("MKR_NGT"));
+        DaiUsdsLike daiUsds = DaiUsdsLike(dss.chainlog.getAddress("DAI_USDS"));
+        MkrSkyLike   mkrSky = MkrSkyLike(dss.chainlog.getAddress("MKR_SKY"));
 
         uint256 daiAmt = dai.balanceOf(pProxy) - daiAmtPrev;
         uint256 mkrAmt = mkr.balanceOf(pProxy) - mkrAmtPrev;
-        dai.approve(address(daiNst), daiAmt);
-        mkr.approve(address(mkrNgt), mkrAmt);
-        daiNst.daiToNst(pairNstNgt, daiAmt);
-        mkrNgt.mkrToNgt(pairNstNgt, mkrAmt);
-        PoolLike(pairNstNgt).mint(pProxy);
+        dai.approve(address(daiUsds), daiAmt);
+        mkr.approve(address(mkrSky), mkrAmt);
+        daiUsds.daiToUsds(pairUsdsSky, daiAmt);
+        mkrSky.mkrToSky(pairUsdsSky, mkrAmt);
+        PoolLike(pairUsdsSky).mint(pProxy);
 
-        require(GemLike(pairNstNgt).balanceOf(pProxy) > 0, "UniV2PoolMigratorInit/sanity-check-3-failed");
+        require(GemLike(pairUsdsSky).balanceOf(pProxy) > 0, "UniV2PoolMigratorInit/sanity-check-3-failed");
     }
 }

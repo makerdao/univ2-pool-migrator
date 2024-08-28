@@ -1,11 +1,11 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "lib/ngt"]
-	path = lib/ngt
-	url = https://github.com/makerdao/ngt
+[submodule "lib/sky"]
+	path = lib/sky
+	url = https://github.com/makerdao/sky
 	branch = dev
-[submodule "lib/nst"]
-	path = lib/nst
-	url = https://github.com/makerdao/nst
+[submodule "lib/usds"]
+	path = lib/usds
+	url = https://github.com/makerdao/usds
 	branch = dev
