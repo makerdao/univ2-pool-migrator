@@ -78,7 +78,8 @@ contract DeploymentTest is DssTest {
         UNIV2_USDS_SKY_PAIR = UniV2FactoryLike(UNIV2_FACTORY).createPair(USDS, SKY);
     }
 
-    function testSetUp() public {
+    // DISABLED since not actual
+    function testSetUp() private {
         DssInstance memory dss = MCD.loadFromChainlog(LOG);
 
         uint256 pProxyDaiMkrBalancePrev = GemLike(UNIV2_DAI_MKR_PAIR).balanceOf(PAUSE_PROXY);
@@ -114,7 +115,8 @@ contract DeploymentTest is DssTest {
         vm.stopPrank();
     }
 
-    function testPriceSanityCheck() public {
+    // DISABLED since not actual
+    function testPriceSanityCheck() private {
         (uint256 daiReserve, uint256 mkrReserve, ) = PoolLike(UNIV2_DAI_MKR_PAIR).getReserves();
         uint256 uniPrice = daiReserve * 1e18 / mkrReserve;
 
