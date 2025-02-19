@@ -14,4 +14,4 @@ It requires to be included after the two scripts that initialize SKY and USDS re
 
 ## UniV2PoolWithdraw
 
-A library to be used in a spell for pooling out liquidity from the SKY-USDS pool.
+A library to be used in a spell for pulling out liquidity from the SKY-USDS pool.
